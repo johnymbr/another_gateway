@@ -7,6 +7,8 @@ use axum::{
 use hyper::StatusCode;
 use serde::{Deserialize, Serialize};
 
+use super::{api_error_code, ApiErrorCode};
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ApiError {
     #[serde(rename = "status")]
@@ -22,6 +24,64 @@ pub struct ApiFieldError {
     pub code: String,
     pub message: String,
     pub field: String,
+    #[serde(rename = "minSize")]
+    pub min_size: Option<u16>,
+    #[serde(rename = "maxSize")]
+    pub max_size: Option<u16>,
+}
+
+impl ApiError {
+    pub fn new(api_error_cde: ApiErrorCode) -> ApiError {
+        ApiError {
+            status_code: 412,
+            code: String::from(api_error_cde.0),
+            message: String::from(api_error_cde.1),
+            field_errors: None,
+        }
+    }
+}
+
+impl ApiFieldError {
+    pub fn new(api_error_code: ApiErrorCode, field: String) -> ApiFieldError {
+        ApiFieldError {
+            code: String::from(api_error_code.0),
+            message: String::from(api_error_code.1),
+            field,
+            min_size: None,
+            max_size: None,
+        }
+    }
+
+    pub fn new_with_min_size(
+        api_error_code: ApiErrorCode,
+        field: String,
+        min_size: u16,
+    ) -> ApiFieldError {
+        let mut api_field_error = ApiFieldError::new(api_error_code, field);
+        api_field_error.min_size = Some(min_size);
+        api_field_error
+    }
+
+    pub fn new_with_max_size(
+        api_error_code: ApiErrorCode,
+        field: String,
+        max_size: u16,
+    ) -> ApiFieldError {
+        let mut api_field_error = ApiFieldError::new(api_error_code, field);
+        api_field_error.max_size = Some(max_size);
+        api_field_error
+    }
+
+    pub fn new_with_min_and_max_size(
+        api_error_code: ApiErrorCode,
+        field: String,
+        min_size: u16,
+        max_size: u16,
+    ) -> ApiFieldError {
+        let mut api_field_error = ApiFieldError::new_with_min_size(api_error_code, field, min_size);
+        api_field_error.max_size = Some(max_size);
+        api_field_error
+    }
 }
 
 impl fmt::Display for ApiError {

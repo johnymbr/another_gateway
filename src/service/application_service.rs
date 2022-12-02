@@ -1,36 +1,68 @@
+use axum::extract::State;
+use chrono::{DateTime, Utc};
 use hyper::StatusCode;
+use sqlx::PgPool;
 
 use crate::{
-    exception::{ApiError, ApiFieldError},
+    exception::{
+        ApiError, ApiErrorCode, ApiFieldError, APP_ERR_INSERTING_ERROR, ERR_INVALID_REQUEST,
+        ERR_MIN_SIZE, ERR_REQUIRED_FIELD,
+    },
     model::{Application, ApplicationReq},
 };
 
-struct ApplicationService {}
+pub struct ApplicationService;
 
 impl ApplicationService {
-    fn save(entity: ApplicationReq) -> Result<Application, ApiError> {
+    pub async fn save(
+        entity: ApplicationReq,
+        State(pool): State<PgPool>,
+    ) -> Result<Application, ApiError> {
         let mut field_errors = Vec::<ApiFieldError>::new();
 
-        let mut name = String::new();
-        match entity.name {
-            Some(name) => {
-                if name.len() < 3 {
-                    field_errors.push(ApiFieldError {
-                        code: "F0001".to_owned(),
-                        message: "Field need to have at least 3 characters.".to_owned(),
-                        field: "application.name".to_owned(),
-                    });
-                }
-            }
-            None => {
-                field_errors.push(ApiFieldError {
-                    code: "F0001".to_owned(),
-                    message: "Field is required".to_owned(),
-                    field: "application.name".to_owned(),
-                });
-            }
+        if let Some(field_error) = ApplicationService::validate_name(&entity) {
+            field_errors.push(field_error);
         }
 
-        Ok(())
+        // TODO: validate other fields.
+
+        if !field_errors.is_empty() {
+            return Err(ApiError::new(ERR_INVALID_REQUEST));
+        }
+
+        let application = sqlx::query_as("insert into anothergateway.tb_applicaiton(name, path, url_destination, created_dttm, update_dttm) values ($1, $2, $3, $4, $5) returning *;")
+            .bind(entity.name)
+            .bind(entity.path)
+            .bind(entity.url_destination)
+            .bind(Utc::now())
+            .bind(Utc::now())
+            .fetch_one(&pool)
+            .await
+            .map_err(|e| {
+                tracing::info!("Error when inserting an application: {}", e);
+                return ApiError::new(APP_ERR_INSERTING_ERROR);
+            })?;
+
+        Ok(application)
+    }
+
+    fn validate_name(entity: &ApplicationReq) -> Option<ApiFieldError> {
+        match entity.name.to_owned() {
+            Some(name) => {
+                if name.len() < 3 {
+                    Some(ApiFieldError::new_with_min_size(
+                        ERR_MIN_SIZE,
+                        "application.name".to_owned(),
+                        3,
+                    ))
+                } else {
+                    None
+                }
+            }
+            None => Some(ApiFieldError::new(
+                ERR_REQUIRED_FIELD,
+                "application.name".to_owned(),
+            )),
+        }
     }
 }
