@@ -11,6 +11,7 @@ use hyper::{client::HttpConnector, Body, Client, StatusCode};
 use serde_json::{json, Value};
 use sqlx::postgres::{PgPool, PgPoolOptions};
 use std::{net::SocketAddr, path::PathBuf, time::Duration};
+use tower_http::trace::TraceLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 pub mod exception;
@@ -37,13 +38,9 @@ async fn main() {
 
     // initializing tracing
     tracing_subscriber::registry()
-        .with(
-            tracing_subscriber::EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| {
-                    print!("unwrap_or_else");
-                    "another_gateway=debug".into()
-                }),
-        )
+        .with(tracing_subscriber::EnvFilter::new(
+            std::env::var("RUST_LOG").unwrap_or_else(|_| "another_gateway=debug".into()),
+        ))
         .with(tracing_subscriber::fmt::layer())
         .init();
 
@@ -75,10 +72,10 @@ async fn main() {
         .with_state(pool)
         .nest(
             "/api",
-            ApplicationController::route()
-            .fallback(api_fallback),
+            ApplicationController::route().fallback(api_fallback),
         )
-        .route("/", get(root));
+        .route("/", get(root))
+        .layer(TraceLayer::new_for_http());
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
 
