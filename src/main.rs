@@ -1,34 +1,51 @@
+use crate::rest::ApplicationController;
 use axum::{
     extract::State,
     http::{uri::Uri, Request, Response},
     routing::get,
-    Router,
+    Json, Router,
 };
 use axum_server::tls_rustls::RustlsConfig;
-use hyper::{client::HttpConnector, Body, Client};
+use dotenv::dotenv;
+use hyper::{client::HttpConnector, Body, Client, StatusCode};
+use serde_json::{json, Value};
 use sqlx::postgres::{PgPool, PgPoolOptions};
 use std::{net::SocketAddr, path::PathBuf, time::Duration};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
-pub mod model;
-pub mod service;
 pub mod exception;
-
+pub mod model;
+pub mod rest;
+pub mod service;
 
 async fn root() -> &'static str {
-    "Hello, world!"
+    "Others routes!!"
+}
+
+async fn api_fallback() -> (StatusCode, Json<Value>) {
+    let body = json!({
+        "status": 404,
+        "message": "Not Found",
+    });
+    (StatusCode::NOT_FOUND, Json(body))
 }
 
 #[tokio::main]
 async fn main() {
+    // load .env file
+    dotenv().ok();
+
     // initializing tracing
     tracing_subscriber::registry()
-    .with(
-        tracing_subscriber::EnvFilter::try_from_default_env()
-            .unwrap_or_else(|_| "another_gateway=debug".into())
-    )
-    .with(tracing_subscriber::fmt::layer())
-    .init();
+        .with(
+            tracing_subscriber::EnvFilter::try_from_default_env()
+                .unwrap_or_else(|_| {
+                    print!("unwrap_or_else");
+                    "another_gateway=debug".into()
+                }),
+        )
+        .with(tracing_subscriber::fmt::layer())
+        .init();
 
     let db_connection_str = std::env::var("DATABASE_URL")
         .unwrap_or_else(|_| "postgres://postgres:password@localhost".to_string());
@@ -46,7 +63,7 @@ async fn main() {
             .join("another_gateway_cert.pem"),
         PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("self_signed_certs")
-            .join("another_gateway_key.pem")
+            .join("another_gateway_key.pem"),
     )
     .await
     .unwrap();
@@ -54,9 +71,14 @@ async fn main() {
     let client = Client::new();
 
     let app = Router::new()
-        .route("/", get(root))
         .with_state(client)
-        .with_state(pool);
+        .with_state(pool)
+        .nest(
+            "/api",
+            ApplicationController::route()
+            .fallback(api_fallback),
+        )
+        .route("/", get(root));
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
 
@@ -66,5 +88,4 @@ async fn main() {
         .serve(app.into_make_service())
         .await
         .unwrap();
-
 }
