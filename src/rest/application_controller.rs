@@ -3,7 +3,7 @@ use axum::{routing::get, Router};
 pub struct ApplicationController;
 
 impl ApplicationController {
-    pub fn route() -> Router {
+    pub fn routes() -> Router {
         Router::new().route("/application", get(ApplicationController::find_application))
     }
 
