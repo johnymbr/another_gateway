@@ -8,16 +8,36 @@ use crate::{
         ApiError, ApiErrorCode, ApiFieldError, APP_ERR_INSERTING_ERROR, ERR_INVALID_REQUEST,
         ERR_MIN_SIZE, ERR_REQUIRED_FIELD,
     },
-    model::{Application, ApplicationReq},
+    model::{Application, ApplicationReq, Pagination, PaginationResponse},
 };
 
 pub struct ApplicationService;
 
 impl ApplicationService {
-    pub async fn save(
-        entity: ApplicationReq,
-        State(pool): State<PgPool>,
-    ) -> Result<Application, ApiError> {
+    pub async fn find_application(
+        pagination: Pagination,
+        pg_pool: &PgPool,
+    ) -> Result<PaginationResponse<Application>, ApiError> {
+
+        let total = sqlx::query_scalar("select count(*) as count from anothergateway.tb_application")
+            .fetch_one(pg_pool)
+            .await
+            .map_err(|e| {
+                tracing::info!("Error when inserting an application: {}", e);
+                return ApiError::new(APP_ERR_INSERTING_ERROR);
+            })?;
+
+        let response = PaginationResponse {
+            page: pagination.page,
+            page_size: pagination.page_size,
+            total,
+            elements: Vec::new()
+        };
+
+        Ok(response)
+    }
+
+    pub async fn save(entity: ApplicationReq, pool: &PgPool) -> Result<Application, ApiError> {
         let mut field_errors = Vec::<ApiFieldError>::new();
 
         if let Some(field_error) = ApplicationService::validate_name(&entity) {
@@ -36,7 +56,7 @@ impl ApplicationService {
             .bind(entity.url_destination)
             .bind(Utc::now())
             .bind(Utc::now())
-            .fetch_one(&pool)
+            .fetch_one(pool)
             .await
             .map_err(|e| {
                 tracing::info!("Error when inserting an application: {}", e);
