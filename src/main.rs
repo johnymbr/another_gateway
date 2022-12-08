@@ -12,6 +12,7 @@ use dotenv::dotenv;
 use hyper::{client::HttpConnector, Body, Client, StatusCode};
 use serde_json::{json, Value};
 use sqlx::postgres::{PgPool, PgPoolOptions};
+use std::sync::Arc;
 use std::{net::SocketAddr, path::PathBuf, time::Duration};
 use tower_http::trace::TraceLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
@@ -47,12 +48,13 @@ async fn main() {
         .with(tracing_subscriber::fmt::layer())
         .init();
 
+    let pg_pool = Arc::new(Db::config().await);
+
     let app = Router::new()
-        .with_state(HttpClient::config())
-        .with_state(Db::config().await)
+        .with_state(Arc::clone(&pg_pool))
         .nest(
             "/api",
-            ApplicationController::routes().fallback(api_fallback),
+            ApplicationController::routes(Arc::clone(&pg_pool)).fallback(api_fallback),
         )
         .route("/", get(root))
         .layer(TraceLayer::new_for_http());
