@@ -7,7 +7,7 @@ use axum::{
 use hyper::StatusCode;
 use serde::{Deserialize, Serialize};
 
-use super::{api_error_code, ApiErrorCode};
+use super::{ApiErrorCode};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ApiError {
