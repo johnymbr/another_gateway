@@ -22,6 +22,7 @@ pub mod exception;
 pub mod model;
 pub mod rest;
 pub mod service;
+pub mod repository;
 
 async fn root() -> &'static str {
     "Others routes!!"

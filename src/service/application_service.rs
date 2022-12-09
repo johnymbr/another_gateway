@@ -6,9 +6,9 @@ use sqlx::PgPool;
 use crate::{
     exception::{
         ApiError, ApiErrorCode, ApiFieldError, APP_ERR_INSERTING_ERROR, ERR_INVALID_REQUEST,
-        ERR_MIN_SIZE, ERR_REQUIRED_FIELD,
+        ERR_MIN_SIZE, ERR_REQUIRED_FIELD, APP_ERR_FINDING_PAGINATED_ERROR,
     },
-    model::{Application, ApplicationReq, Pagination, PaginationResponse},
+    model::{Application, ApplicationReq, Pagination, PaginationResponse}, repository::ApplicationRepository,
 };
 
 pub struct ApplicationService;
@@ -18,22 +18,9 @@ impl ApplicationService {
         pagination: Pagination,
         pg_pool: &PgPool,
     ) -> Result<PaginationResponse<Application>, ApiError> {
+        pagination.validate()?;
 
-        let total = sqlx::query_scalar("select count(*) as count from anothergateway.tb_application")
-            .fetch_one(pg_pool)
-            .await
-            .map_err(|e| {
-                tracing::info!("Error when inserting an application: {}", e);
-                return ApiError::new(APP_ERR_INSERTING_ERROR);
-            })?;
-
-        let response = PaginationResponse {
-            page: pagination.page,
-            page_size: pagination.page_size,
-            total,
-            elements: Vec::new()
-        };
-
+        let response = ApplicationRepository::find_application(pagination, pg_pool).await?;
         Ok(response)
     }
 
@@ -50,7 +37,7 @@ impl ApplicationService {
             return Err(ApiError::new(ERR_INVALID_REQUEST));
         }
 
-        let application = sqlx::query_as("insert into anothergateway.tb_applicaiton(name, path, url_destination, created_dttm, update_dttm) values ($1, $2, $3, $4, $5) returning *;")
+        let application = sqlx::query_as("insert into anothergtw.tb_applicaiton(name, path, url_destination, created_dttm, update_dttm) values ($1, $2, $3, $4, $5) returning *;")
             .bind(entity.name)
             .bind(entity.path)
             .bind(entity.url_destination)
