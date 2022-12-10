@@ -13,5 +13,7 @@ pub const ERR_REQUIRED_FIELD: ApiErrorCode = ApiErrorCode("F0001", "This field i
 pub const ERR_MIN_SIZE: ApiErrorCode = ApiErrorCode("F0002", "This field must has a minimum amount of characters.");
 
 // Application errors.
-pub const APP_ERR_INSERTING_ERROR: ApiErrorCode = ApiErrorCode("APP0001", "Error when inserting a new application.");
-pub const APP_ERR_FINDING_PAGINATED_ERROR: ApiErrorCode = ApiErrorCode("APP0002", "Error when finding applications paginated.");
+pub const APP_ERR_INSERTING: ApiErrorCode = ApiErrorCode("APP0001", "Error when insert a new application.");
+pub const APP_ERR_FINDING_PAGINATED: ApiErrorCode = ApiErrorCode("APP0002", "Error when search applications with pagination.");
+pub const APP_ERR_FIND_BY_ID: ApiErrorCode = ApiErrorCode("APP0003", "Error when search an application by id.");
+pub const APP_ERR_NOT_FOUND: ApiErrorCode = ApiErrorCode("APP0004", "Application wasn't find.");

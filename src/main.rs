@@ -1,19 +1,15 @@
-use crate::config::{Db, HttpClient, Rustls};
+use crate::config::{Db, Rustls};
 use crate::rest::ApplicationController;
 
 use axum::{
-    extract::State,
-    http::{uri::Uri, Request, Response},
     routing::get,
     Json, Router,
 };
-use axum_server::tls_rustls::RustlsConfig;
 use dotenv::dotenv;
-use hyper::{client::HttpConnector, Body, Client, StatusCode};
+use hyper::{StatusCode};
 use serde_json::{json, Value};
-use sqlx::postgres::{PgPool, PgPoolOptions};
 use std::sync::Arc;
-use std::{net::SocketAddr, path::PathBuf, time::Duration};
+use std::{net::SocketAddr};
 use tower_http::trace::TraceLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 

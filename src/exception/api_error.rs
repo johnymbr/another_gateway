@@ -7,7 +7,7 @@ use axum::{
 use hyper::StatusCode;
 use serde::{Deserialize, Serialize};
 
-use super::{ApiErrorCode};
+use super::ApiErrorCode;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ApiError {
@@ -34,6 +34,15 @@ impl ApiError {
     pub fn new(api_error_cde: ApiErrorCode) -> ApiError {
         ApiError {
             status_code: 412,
+            code: String::from(api_error_cde.0),
+            message: String::from(api_error_cde.1),
+            field_errors: None,
+        }
+    }
+
+    pub fn new_with_status(status: StatusCode, api_error_cde: ApiErrorCode) -> ApiError {
+        ApiError {
+            status_code: status.as_u16(),
             code: String::from(api_error_cde.0),
             message: String::from(api_error_cde.1),
             field_errors: None,
