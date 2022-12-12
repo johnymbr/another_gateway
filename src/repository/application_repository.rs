@@ -1,17 +1,29 @@
+use axum::async_trait;
 use chrono::Utc;
 use sqlx::PgPool;
 
 use crate::{
-    exception::{
-        ApiError, APP_ERR_FINDING_PAGINATED, APP_ERR_FIND_BY_ID, APP_ERR_INSERTING,
-    },
+    exception::{ApiError, APP_ERR_FINDING_PAGINATED, APP_ERR_FIND_BY_ID, APP_ERR_INSERTING},
     model::{Application, ApplicationReq, Pagination, PaginationResponse},
 };
 
+#[async_trait]
+pub trait ApplicationRepositoryTrait {
+    async fn find_all(
+        pagination: Pagination,
+        pg_pool: &PgPool,
+    ) -> Result<PaginationResponse<Application>, ApiError>;
+
+    async fn find_by_id(id: i64, pg_pool: &PgPool) -> Result<Option<Application>, ApiError>;
+
+    async fn save(entity: ApplicationReq, pg_pool: &PgPool) -> Result<Application, ApiError>;
+}
+
 pub struct ApplicationRepository;
 
-impl ApplicationRepository {
-    pub async fn find_all(
+#[async_trait]
+impl ApplicationRepositoryTrait for ApplicationRepository {
+    async fn find_all(
         pagination: Pagination,
         pg_pool: &PgPool,
     ) -> Result<PaginationResponse<Application>, ApiError> {
@@ -50,7 +62,7 @@ impl ApplicationRepository {
         Ok(response)
     }
 
-    pub async fn find_by_id(id: i64, pg_pool: &PgPool) -> Result<Option<Application>, ApiError> {
+    async fn find_by_id(id: i64, pg_pool: &PgPool) -> Result<Option<Application>, ApiError> {
         let application = sqlx::query_as!(
             Application,
             r#"select * from anothergtw.tb_application where id = $1"#,
@@ -66,7 +78,7 @@ impl ApplicationRepository {
         Ok(application)
     }
 
-    pub async fn save(entity: ApplicationReq, pg_pool: &PgPool) -> Result<Application, ApiError> {
+    async fn save(entity: ApplicationReq, pg_pool: &PgPool) -> Result<Application, ApiError> {
         let application = sqlx::query_as("insert into anothergtw.tb_applicaiton(name, path, url_destination, created_dttm, update_dttm) values ($1, $2, $3, $4, $5) returning *;")
             .bind(entity.name)
             .bind(entity.path)
