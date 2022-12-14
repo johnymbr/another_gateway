@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use axum::async_trait;
 use chrono::Utc;
 use sqlx::PgPool;
@@ -9,26 +11,26 @@ use crate::{
 
 #[async_trait]
 pub trait ApplicationRepositoryTrait {
-    async fn find_all(
-        pagination: Pagination,
-        pg_pool: &PgPool,
+    async fn find_all(&self,
+        pagination: Pagination
     ) -> Result<PaginationResponse<Application>, ApiError>;
 
-    async fn find_by_id(id: i64, pg_pool: &PgPool) -> Result<Option<Application>, ApiError>;
+    async fn find_by_id(&self, id: i64) -> Result<Option<Application>, ApiError>;
 
-    async fn save(entity: ApplicationReq, pg_pool: &PgPool) -> Result<Application, ApiError>;
+    async fn save(&self, entity: ApplicationReq) -> Result<Application, ApiError>;
 }
 
-pub struct ApplicationRepository;
+pub struct ApplicationRepository {
+    pub pg_pool: Arc<PgPool>,
+}
 
 #[async_trait]
 impl ApplicationRepositoryTrait for ApplicationRepository {
-    async fn find_all(
-        pagination: Pagination,
-        pg_pool: &PgPool,
+    async fn find_all(&self,
+        pagination: Pagination
     ) -> Result<PaginationResponse<Application>, ApiError> {
         let total = sqlx::query_scalar("select count(*) as count from anothergtw.tb_application")
-            .fetch_one(pg_pool)
+            .fetch_one(&*self.pg_pool)
             .await
             .map_err(|e| {
                 tracing::error!("Error when finding applications: {}", e);
@@ -49,7 +51,7 @@ impl ApplicationRepositoryTrait for ApplicationRepository {
                 pagination.page_size.unwrap(),
                 pagination.offset()
             )
-            .fetch_all(pg_pool)
+            .fetch_all(&*self.pg_pool)
             .await
             .map_err(|e| {
                 tracing::error!("Error when finding applications: {}", e);
@@ -62,13 +64,13 @@ impl ApplicationRepositoryTrait for ApplicationRepository {
         Ok(response)
     }
 
-    async fn find_by_id(id: i64, pg_pool: &PgPool) -> Result<Option<Application>, ApiError> {
+    async fn find_by_id(&self, id: i64) -> Result<Option<Application>, ApiError> {
         let application = sqlx::query_as!(
             Application,
             r#"select * from anothergtw.tb_application where id = $1"#,
             id
         )
-        .fetch_optional(pg_pool)
+        .fetch_optional(&*self.pg_pool)
         .await
         .map_err(|e| {
             tracing::error!("Error when finding an application by id: {}", e);
@@ -78,14 +80,14 @@ impl ApplicationRepositoryTrait for ApplicationRepository {
         Ok(application)
     }
 
-    async fn save(entity: ApplicationReq, pg_pool: &PgPool) -> Result<Application, ApiError> {
+    async fn save(&self, entity: ApplicationReq) -> Result<Application, ApiError> {
         let application = sqlx::query_as("insert into anothergtw.tb_applicaiton(name, path, url_destination, created_dttm, update_dttm) values ($1, $2, $3, $4, $5) returning *;")
             .bind(entity.name)
             .bind(entity.path)
             .bind(entity.url_destination)
             .bind(Utc::now())
             .bind(Utc::now())
-            .fetch_one(pg_pool)
+            .fetch_one(&*self.pg_pool)
             .await
             .map_err(|e| {
                 tracing::info!("Error when inserting an application: {}", e);

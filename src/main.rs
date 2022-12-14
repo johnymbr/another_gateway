@@ -51,7 +51,7 @@ async fn main() {
         .with_state(Arc::clone(&pg_pool))
         .nest(
             "/api",
-            ApplicationController::routes(Arc::clone(&pg_pool)).fallback(api_fallback),
+            ApplicationController::new().routes(Arc::clone(&pg_pool)).fallback(api_fallback),
         )
         .route("/", get(root))
         .layer(TraceLayer::new_for_http());
