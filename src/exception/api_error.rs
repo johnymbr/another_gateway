@@ -109,3 +109,15 @@ impl IntoResponse for ApiError {
         (status_code, Json(self)).into_response()
     }
 }
+
+impl fmt::Display for ApiFieldError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(
+            format!(
+                "[{}] {} | {} | Min Size: {:?}, Max Size: {:?}",
+                self.code, self.message, self.field, self.min_size, self.max_size
+            )
+            .as_str(),
+        )
+    }
+}

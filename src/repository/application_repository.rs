@@ -82,9 +82,9 @@ impl ApplicationRepositoryTrait for ApplicationRepository {
 
     async fn save(&self, entity: ApplicationReq) -> Result<Application, ApiError> {
         let application = sqlx::query_as("insert into anothergtw.tb_applicaiton(name, path, url_destination, created_dttm, update_dttm) values ($1, $2, $3, $4, $5) returning *;")
-            .bind(entity.name)
-            .bind(entity.path)
-            .bind(entity.url_destination)
+            .bind(entity.name.unwrap().value())
+            .bind(entity.path.unwrap().value())
+            .bind(entity.url_destination.unwrap().value())
             .bind(Utc::now())
             .bind(Utc::now())
             .fetch_one(&*self.pg_pool)

@@ -1,3 +1,6 @@
+extern crate derive_more;
+extern crate serde;
+
 use crate::config::{Db, Rustls};
 use crate::rest::ApplicationController;
 
