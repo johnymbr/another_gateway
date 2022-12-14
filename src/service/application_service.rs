@@ -1,3 +1,6 @@
+use std::sync::Arc;
+
+use axum::async_trait;
 use hyper::StatusCode;
 use sqlx::PgPool;
 
@@ -7,24 +10,45 @@ use crate::{
         ERR_REQUIRED_FIELD,
     },
     model::{Application, ApplicationReq, Pagination, PaginationResponse},
-    repository::ApplicationRepository,
+    repository::{ApplicationRepository, ApplicationRepositoryTrait},
 };
 
-pub struct ApplicationService;
+#[async_trait]
+pub trait ApplicationServiceTrait {
+    async fn find_all(
+        &self,
+        pagination: Pagination
+    ) -> Result<PaginationResponse<Application>, ApiError>;
 
-impl ApplicationService {
-    pub async fn find_all(
-        pagination: Pagination,
-        pg_pool: &PgPool,
+    async fn find_by_id(&self, id: i64) -> Result<Application, ApiError>;
+
+    async fn save(
+        &self,
+        entity: ApplicationReq
+    ) -> Result<Application, ApiError>;
+}
+
+pub struct ApplicationService {
+    application_repository: Arc<dyn ApplicationRepositoryTrait + Send + Sync>,
+}
+
+#[async_trait]
+impl ApplicationServiceTrait for ApplicationService {
+    async fn find_all(
+        &self,
+        pagination: Pagination
     ) -> Result<PaginationResponse<Application>, ApiError> {
         pagination.validate()?;
 
-        let response = ApplicationRepository::find_all(pagination, pg_pool).await?;
+        let response = self
+            .application_repository
+            .find_all(pagination)
+            .await?;
         Ok(response)
     }
 
-    pub async fn find_by_id(id: i64, pg_pool: &PgPool) -> Result<Application, ApiError> {
-        let response = ApplicationRepository::find_by_id(id, pg_pool).await?;
+    async fn find_by_id(&self, id: i64) -> Result<Application, ApiError> {
+        let response = self.application_repository.find_by_id(id).await?;
 
         if let None = response {
             return Err(ApiError::new_with_status(
@@ -35,18 +59,21 @@ impl ApplicationService {
         Ok(response.unwrap())
     }
 
-    pub async fn save(entity: ApplicationReq, pg_pool: &PgPool) -> Result<Application, ApiError> {
+    async fn save(
+        &self,
+        entity: ApplicationReq
+    ) -> Result<Application, ApiError> {
         let mut field_errors = Vec::<ApiFieldError>::new();
 
-        if let Some(field_error) = ApplicationService::validate_name(&entity) {
+        if let Some(field_error) = self.validate_name(&entity) {
             field_errors.push(field_error);
         }
 
-        if let Some(field_error) = ApplicationService::validate_path(&entity) {
+        if let Some(field_error) = self.validate_path(&entity) {
             field_errors.push(field_error);
         }
 
-        if let Some(field_error) = ApplicationService::validate_url_destination(&entity) {
+        if let Some(field_error) = self.validate_url_destination(&entity) {
             field_errors.push(field_error);
         }
 
@@ -54,11 +81,27 @@ impl ApplicationService {
             return Err(ApiError::new(ERR_INVALID_REQUEST));
         }
 
-        let application = ApplicationRepository::save(entity, pg_pool).await?;
+        let application = self.application_repository.save(entity).await?;
         Ok(application)
     }
+}
 
-    fn validate_name(entity: &ApplicationReq) -> Option<ApiFieldError> {
+impl ApplicationService {
+    pub fn new(pg_pool: Arc<PgPool>) -> Self {
+        ApplicationService {
+            application_repository: Arc::new(ApplicationRepository {
+                pg_pool
+            }),
+        }
+    }
+
+    pub fn new_with_repo(repository: Arc<dyn ApplicationRepositoryTrait + Send + Sync>) -> Self {
+        ApplicationService {
+            application_repository: repository,
+        }
+    }
+
+    fn validate_name(&self, entity: &ApplicationReq) -> Option<ApiFieldError> {
         match entity.name.to_owned() {
             Some(name) => {
                 if name.len() < 3 {
@@ -78,7 +121,7 @@ impl ApplicationService {
         }
     }
 
-    fn validate_path(entity: &ApplicationReq) -> Option<ApiFieldError> {
+    fn validate_path(&self, entity: &ApplicationReq) -> Option<ApiFieldError> {
         match entity.path.to_owned() {
             Some(path) => {
                 if path.len() < 3 {
@@ -98,7 +141,7 @@ impl ApplicationService {
         }
     }
 
-    fn validate_url_destination(entity: &ApplicationReq) -> Option<ApiFieldError> {
+    fn validate_url_destination(&self, entity: &ApplicationReq) -> Option<ApiFieldError> {
         match entity.url_destination.to_owned() {
             Some(url_destination) => {
                 if url_destination.len() < 3 {
