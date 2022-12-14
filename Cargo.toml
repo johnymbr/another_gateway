@@ -9,6 +9,7 @@ edition = "2021"
 axum = "0.6.1"
 axum-server = { version = "0.4.4", features = ["tls-rustls"] }
 chrono = { version = "0.4.23", features = ["serde"] }
+derive_more = "0.99.17"
 dotenv = "0.15.0"
 hyper = { version = "0.14.14", features = ["full"] }
 serde = { version = "1.0.148", features = ["derive"] }
