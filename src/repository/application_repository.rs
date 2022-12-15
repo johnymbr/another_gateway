@@ -9,6 +9,7 @@ use crate::{
     model::{Application, ApplicationReq, Pagination, PaginationResponse},
 };
 
+#[cfg_attr(test, mockall::automock)]
 #[async_trait]
 pub trait ApplicationRepositoryTrait {
     async fn find_all(&self,

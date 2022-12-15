@@ -48,6 +48,15 @@ impl ApiError {
             field_errors: None,
         }
     }
+
+    pub fn new_with_field_errors(api_error_cde: ApiErrorCode, field_errors: Vec<ApiFieldError>) -> ApiError {
+        ApiError {
+            status_code: 412,
+            code: String::from(api_error_cde.0),
+            message: String::from(api_error_cde.1),
+            field_errors: Some(field_errors),
+        }
+    }
 }
 
 impl ApiFieldError {
