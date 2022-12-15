@@ -85,7 +85,7 @@ impl ApplicationReq {
         }
 
         if !field_errors.is_empty() {
-            return Err(ApiError::new(ERR_INVALID_REQUEST));
+            return Err(ApiError::new_with_field_errors(ERR_INVALID_REQUEST, field_errors));
         }
 
         Ok(())
