@@ -90,4 +90,51 @@ impl ApplicationReq {
 
         Ok(())
     }
+
+    pub fn validate_updating(&self) -> Result<(), ApiError> {
+        let mut field_errors = Vec::<ApiFieldError>::new();
+
+        match &self.name {
+            Some(name) => {
+                match name.validate("application.name".to_owned()) {
+                    Err(e) => {
+                        field_errors.push(e);
+                    },
+                    _ => {},
+                }
+            }
+            None => {}
+        }
+
+        match &self.path {
+            Some(path) => {
+                match path.validate("application.path".to_owned()) {
+                    Err(e) => {
+                        field_errors.push(e);
+                    },
+                    _ => {}
+                }
+            }
+            None => {}
+        }
+
+        match &self.url_destination {
+            Some(url_destination) => {
+                match url_destination
+                .validate("application.urlDestination".to_owned()) {
+                    Err(e) => {
+                        field_errors.push(e);
+                    },
+                    _ => {}
+                }
+            }
+            None => {}
+        }
+
+        if !field_errors.is_empty() {
+            return Err(ApiError::new_with_field_errors(ERR_INVALID_REQUEST, field_errors));
+        }
+
+        Ok(())
+    }
 }
