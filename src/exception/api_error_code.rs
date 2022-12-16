@@ -17,3 +17,5 @@ pub const APP_ERR_INSERTING: ApiErrorCode = ApiErrorCode("APP0001", "Error when 
 pub const APP_ERR_FINDING_PAGINATED: ApiErrorCode = ApiErrorCode("APP0002", "Error when search applications with pagination.");
 pub const APP_ERR_FIND_BY_ID: ApiErrorCode = ApiErrorCode("APP0003", "Error when search an application by id.");
 pub const APP_ERR_NOT_FOUND: ApiErrorCode = ApiErrorCode("APP0004", "Application wasn't find.");
+pub const APP_ERR_UPDATING: ApiErrorCode = ApiErrorCode("APP0005", "Error when update an application.");
+pub const APP_ERR_DELETE: ApiErrorCode = ApiErrorCode("APP0006", "Error when delete an application.");
