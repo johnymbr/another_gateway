@@ -2,30 +2,28 @@ extern crate derive_more;
 extern crate serde;
 
 use crate::config::{Db, Rustls};
-use crate::rest::ApplicationController;
+use crate::rest::{ApplicationController, ForwardController};
 
+use axum::routing::any_service;
 use axum::{
-    routing::get,
     Json, Router,
 };
 use dotenv::dotenv;
-use hyper::{StatusCode};
+use hyper::service::service_fn;
+use hyper::StatusCode;
 use serde_json::{json, Value};
+use std::net::SocketAddr;
 use std::sync::Arc;
-use std::{net::SocketAddr};
 use tower_http::trace::TraceLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 pub mod config;
 pub mod exception;
 pub mod model;
+pub mod repository;
 pub mod rest;
 pub mod service;
-pub mod repository;
 
-async fn root() -> &'static str {
-    "Others routes!!"
-}
 
 async fn api_fallback() -> (StatusCode, Json<Value>) {
     let body = json!({
@@ -49,14 +47,22 @@ async fn main() {
         .init();
 
     let pg_pool = Arc::new(Db::config().await);
+    let forward_controller = ForwardController::new(Arc::clone(&pg_pool));
 
     let app = Router::new()
-        .with_state(Arc::clone(&pg_pool))
         .nest(
             "/api",
-            ApplicationController::new().routes(Arc::clone(&pg_pool)).fallback(api_fallback),
+            ApplicationController::new()
+                .routes(Arc::clone(&pg_pool))
+                .fallback(api_fallback),
         )
-        .route("/", get(root))
+        .route(
+            "/",
+            any_service(service_fn(move |req| {
+                let forward_service = Arc::clone(&forward_controller.forward_service);
+                async { ForwardController::handle(req, forward_service).await }
+            })),
+        )
         .layer(TraceLayer::new_for_http());
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
