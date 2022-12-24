@@ -1,34 +1,41 @@
-use std::sync::Arc;
+use std::{sync::Arc, convert::Infallible};
 
 use axum::{
-    extract::{self, Path, Query, State},
     http::{Request, Response},
-    routing::get,
-    Json, Router, Extension,
 };
-use hyper::{StatusCode, Body};
+use hyper::{Body, StatusCode};
 use sqlx::PgPool;
 
 use crate::{
-    exception::ApiError,
-    model::{ApplicationReq, Pagination},
-    service::{ApplicationService, ApplicationServiceTrait, ForwardServiceTrait, ForwardService},
+    service::{ForwardService, ForwardServiceTrait},
 };
 
 pub struct ForwardController {
-    forward_service: Arc<dyn ForwardServiceTrait + Send + Sync>,
+    pub forward_service: Arc<dyn ForwardServiceTrait + Send + Sync>,
 }
 
 impl ForwardController {
     pub fn new(pg_pool: Arc<PgPool>) -> Self {
-        let forward_service: Arc<dyn ForwardServiceTrait + Send + Sync> = Arc::new(ForwardService::new(Arc::clone(&pg_pool)));
-        ForwardController {
-            forward_service
-        }
+        let forward_service: Arc<dyn ForwardServiceTrait + Send + Sync> =
+            Arc::new(ForwardService::new(Arc::clone(&pg_pool)));
+        ForwardController { forward_service }
     }
 
-    pub async fn handle(mut req: Request<Body>, Extension(forward_service): Extension<Arc<dyn ForwardServiceTrait + Send + Sync>>) ->  Result<Response<Body>, ApiError> {
-        let result = forward_service.handle(req).await?;
-        Ok(result)
+    pub async fn handle(
+        req: Request<Body>,
+        forward_service: Arc<dyn ForwardServiceTrait + Send + Sync>,
+    ) -> Result<Response<Body>, Infallible> {
+        let result = forward_service.handle(req).await;
+
+        match result {
+            Ok(response) => Ok(response),
+            Err(api_error) => {
+                let json = serde_json::to_string(&api_error).unwrap();
+                Ok(Response::builder()
+                    .status(StatusCode::from_u16(api_error.status_code).unwrap())
+                    .body(Body::from(json))
+                    .unwrap())
+            }
+        }
     }
 }

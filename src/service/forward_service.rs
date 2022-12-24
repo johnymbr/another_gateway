@@ -31,7 +31,7 @@ impl ForwardService {
 #[async_trait]
 impl ForwardServiceTrait for ForwardService {
     async fn handle(&self, mut req: Request<Body>) ->  Result<Response<Body>, ApiError> {
-        if let Some(applicationId) =req.headers().get("X-Application-Id") {
+        if let Some(application_id) =req.headers().get("X-Application-Id") {
             let path = req.uri().path();
             tracing::info!("{}", path);
 
