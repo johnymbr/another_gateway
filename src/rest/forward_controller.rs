@@ -1,12 +1,14 @@
-use std::{sync::Arc, convert::Infallible};
+use std::{convert::Infallible, sync::Arc};
 
 use axum::{
+    extract::State,
     http::{Request, Response},
 };
 use hyper::{Body, StatusCode};
 use sqlx::PgPool;
 
 use crate::{
+    exception::ApiError,
     service::{ForwardService, ForwardServiceTrait},
 };
 
@@ -21,7 +23,16 @@ impl ForwardController {
         ForwardController { forward_service }
     }
 
+    // #[debug_handler]
     pub async fn handle(
+        State(forward_service): State<Arc<dyn ForwardServiceTrait + Send + Sync>>,
+        req: Request<Body>,
+    ) -> Result<Response<Body>, ApiError> {
+        let result = forward_service.handle(req).await?;
+        Ok(result)
+    }
+
+    pub async fn handle_old(
         req: Request<Body>,
         forward_service: Arc<dyn ForwardServiceTrait + Send + Sync>,
     ) -> Result<Response<Body>, Infallible> {
