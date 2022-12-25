@@ -4,12 +4,9 @@ extern crate serde;
 use crate::config::{Db, Rustls};
 use crate::rest::{ApplicationController, ForwardController};
 
-use axum::routing::any_service;
-use axum::{
-    Json, Router,
-};
+use axum::routing::any;
+use axum::{Json, Router};
 use dotenv::dotenv;
-use hyper::service::service_fn;
 use hyper::StatusCode;
 use serde_json::{json, Value};
 use std::net::SocketAddr;
@@ -23,7 +20,6 @@ pub mod model;
 pub mod repository;
 pub mod rest;
 pub mod service;
-
 
 async fn api_fallback() -> (StatusCode, Json<Value>) {
     let body = json!({
@@ -57,11 +53,13 @@ async fn main() {
                 .fallback(api_fallback),
         )
         .route(
-            "/",
-            any_service(service_fn(move |req| {
-                let forward_service = Arc::clone(&forward_controller.forward_service);
-                async { ForwardController::handle(req, forward_service).await }
-            })),
+            "/*path",
+            any(ForwardController::handle)
+                .with_state(Arc::clone(&forward_controller.forward_service)),
+            // any_service(service_fn(move |req| {
+            //     let forward_service = Arc::clone(&forward_controller.forward_service);
+            //     async { ForwardController::handle(req, forward_service).await }
+            // })),
         )
         .layer(TraceLayer::new_for_http());
 
@@ -69,8 +67,9 @@ async fn main() {
 
     tracing::debug!("listening on {}", addr);
 
-    axum_server::bind_rustls(addr, Rustls::config().await)
+    axum::Server::bind(&addr)
         .serve(app.into_make_service())
         .await
         .unwrap();
+    // axum_server::bind_rustls(addr, Rustls::config().await)
 }

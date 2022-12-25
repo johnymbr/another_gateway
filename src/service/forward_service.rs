@@ -9,7 +9,7 @@ use sqlx::PgPool;
 
 use crate::exception::{ApiError, APP_ERR_ID_IS_REQUIRED};
 
-use super::{ApplicationServiceTrait, ApplicationService};
+use super::{ApplicationService, ApplicationServiceTrait};
 
 #[async_trait]
 pub trait ForwardServiceTrait {
@@ -30,19 +30,15 @@ impl ForwardService {
 
 #[async_trait]
 impl ForwardServiceTrait for ForwardService {
-    async fn handle(&self, mut req: Request<Body>) ->  Result<Response<Body>, ApiError> {
-        if let Some(application_id) =req.headers().get("X-Application-Id") {
-            let path = req.uri().path();
-            tracing::info!("{}", path);
+    async fn handle(&self, mut req: Request<Body>) -> Result<Response<Body>, ApiError> {
+        let path = req.uri().path();
+        tracing::info!("{}", path);
 
-            let path_segment: Vec<&str> = path.split("/").collect();
-            if !path_segment.is_empty() {
-                tracing::info!("{:?}", path_segment.first());
-            }
-
-            Ok(Response::new(Body::empty()))
-        } else {
-            Err(ApiError::new(APP_ERR_ID_IS_REQUIRED))
+        let path_segment: Vec<&str> = path.split("/").collect();
+        if !path_segment.is_empty() {
+            tracing::info!("{:?}", path_segment[1]);
         }
+
+        Ok(Response::new(Body::empty()))
     }
 }

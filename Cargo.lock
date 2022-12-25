@@ -36,6 +36,7 @@ name = "another_gateway"
 version = "0.1.0"
 dependencies = [
  "axum",
+ "axum-macros",
  "axum-server",
  "chrono",
  "derive_more",
@@ -131,6 +132,18 @@ dependencies = [
  "rustversion",
  "tower-layer",
  "tower-service",
+]
+
+[[package]]
+name = "axum-macros"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e4df0fc33ada14a338b799002f7e8657711422b25d4e16afb032708d6b185621"
+dependencies = [
+ "heck",
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]
