@@ -5,7 +5,7 @@ use chrono::Utc;
 use sqlx::PgPool;
 
 use crate::{
-    exception::{ApiError, APP_ERR_FINDING_PAGINATED, APP_ERR_FIND_BY_ID, APP_ERR_INSERTING, APP_ERR_UPDATING, APP_ERR_DELETE},
+    exception::{ApiError, APP_ERR_FINDING_PAGINATED, APP_ERR_FIND_BY_ID, APP_ERR_INSERTING, APP_ERR_UPDATING, APP_ERR_DELETE, APP_ERR_FIND_BY_PATH},
     model::{Application, ApplicationReq, Pagination, PaginationResponse},
 };
 
@@ -18,6 +18,8 @@ pub trait ApplicationRepositoryTrait {
     ) -> Result<PaginationResponse<Application>, ApiError>;
 
     async fn find_by_id(&self, id: i64) -> Result<Option<Application>, ApiError>;
+
+    async fn find_by_path(&self, path: &str) -> Result<Option<Application>, ApiError>;
 
     async fn save(&self, entity: ApplicationReq) -> Result<Application, ApiError>;
 
@@ -82,6 +84,22 @@ impl ApplicationRepositoryTrait for ApplicationRepository {
         .map_err(|e| {
             tracing::error!("Error when finding an application by id: {}", e);
             return ApiError::new(APP_ERR_FIND_BY_ID);
+        })?;
+
+        Ok(application)
+    }
+
+    async fn find_by_path(&self, path: &str) -> Result<Option<Application>, ApiError> {
+        let application = sqlx::query_as!(
+            Application,
+            r#"select * from anothergtw.tb_application where path = $1"#,
+            path
+        )
+        .fetch_optional(&*self.pg_pool)
+        .await
+        .map_err(|e| {
+            tracing::error!("Error when finding an application by path: {}", e);
+            return ApiError::new(APP_ERR_FIND_BY_PATH);
         })?;
 
         Ok(application)
