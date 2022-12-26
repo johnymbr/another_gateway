@@ -1,7 +1,7 @@
 extern crate derive_more;
 extern crate serde;
 
-use crate::config::{Db, Rustls};
+use crate::config::Db;
 use crate::rest::{ApplicationController, ForwardController};
 
 use axum::routing::any;
@@ -56,10 +56,6 @@ async fn main() {
             "/*path",
             any(ForwardController::handle)
                 .with_state(Arc::clone(&forward_controller.forward_service)),
-            // any_service(service_fn(move |req| {
-            //     let forward_service = Arc::clone(&forward_controller.forward_service);
-            //     async { ForwardController::handle(req, forward_service).await }
-            // })),
         )
         .layer(TraceLayer::new_for_http());
 

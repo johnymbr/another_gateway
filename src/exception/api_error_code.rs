@@ -20,3 +20,8 @@ pub const APP_ERR_NOT_FOUND: ApiErrorCode = ApiErrorCode("APP0004", "Application
 pub const APP_ERR_UPDATING: ApiErrorCode = ApiErrorCode("APP0005", "Error when update an application.");
 pub const APP_ERR_DELETE: ApiErrorCode = ApiErrorCode("APP0006", "Error when delete an application.");
 pub const APP_ERR_ID_IS_REQUIRED: ApiErrorCode = ApiErrorCode("APP0007", "The Id of Application is required.");
+pub const APP_ERR_FIND_BY_PATH: ApiErrorCode = ApiErrorCode("APP0008", "Error when search an application by his path.");
+
+// Forward errors.
+pub const FORWARD_ERR_PATH_IS_REQUIRED: ApiErrorCode = ApiErrorCode("FWD0001", "At least one path is required.");
+pub const FORWARD_ERR_PATH_NOT_FOUND: ApiErrorCode = ApiErrorCode("FWD0002", "Main path could not be found.");

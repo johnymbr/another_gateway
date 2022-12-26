@@ -23,6 +23,8 @@ pub trait ApplicationServiceTrait {
 
     async fn find_by_id(&self, id: i64) -> Result<Application, ApiError>;
 
+    async fn find_by_path(&self, path: &str) -> Result<Application, ApiError>;
+
     async fn save(&self, entity: ApplicationReq) -> Result<Application, ApiError>;
 
     async fn update(&self, id: i64, entity: ApplicationReq) -> Result<Application, ApiError>;
@@ -55,6 +57,16 @@ impl ApplicationServiceTrait for ApplicationService {
                 APP_ERR_NOT_FOUND,
             ));
         }
+        Ok(response.unwrap())
+    }
+
+    async fn find_by_path(&self, path: &str) -> Result<Application, ApiError> {
+        let response = self.application_repository.find_by_path(path).await?;
+
+        if let None = response {
+            return Err(ApiError::new_with_status(StatusCode::NOT_FOUND, APP_ERR_NOT_FOUND))
+        }
+
         Ok(response.unwrap())
     }
 
