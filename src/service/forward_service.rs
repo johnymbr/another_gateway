@@ -2,9 +2,9 @@ use std::sync::Arc;
 
 use axum::{
     async_trait,
-    http::{Request, Response},
+    http::{Request, Response, uri::Uri},
 };
-use hyper::Body;
+use hyper::{Body, Client};
 use sqlx::PgPool;
 
 use crate::exception::{ApiError, FORWARD_ERR_PATH_IS_REQUIRED};
@@ -13,7 +13,7 @@ use super::{ApplicationService, ApplicationServiceTrait};
 
 #[async_trait]
 pub trait ForwardServiceTrait {
-    async fn handle(&self, req: Request<Body>) -> Result<Response<Body>, ApiError>;
+    async fn handle(&self, mut req: Request<Body>) -> Result<Response<Body>, ApiError>;
 }
 
 pub struct ForwardService {
@@ -30,7 +30,7 @@ impl ForwardService {
 
 #[async_trait]
 impl ForwardServiceTrait for ForwardService {
-    async fn handle(&self, req: Request<Body>) -> Result<Response<Body>, ApiError> {
+    async fn handle(&self, mut req: Request<Body>) -> Result<Response<Body>, hyper::Error> {
         let path = req.uri().path();
         tracing::info!("{}", path);
 
@@ -45,11 +45,23 @@ impl ForwardServiceTrait for ForwardService {
 
             let application = self.application_service.find_by_path((String::from("/") + path_application).as_str()).await?;
             tracing::info!("{:?}", application.path);
+
+            // TODO: create hyper Client, change uri of request and send new request.
+            let mut new_path_and_query = path_segment.join("/");
+            if let Some(query) = req.uri().query() {
+                new_path_and_query = new_path_and_query + query;
+            }
+
+            let new_uri = format!("{}/{}", application.url_destination, new_path_and_query);
+
+            *req.uri_mut() = Uri::try_from(new_uri).unwrap();
+
+            let client = Client::new();
+
+            client.request(req).await
+            // Ok(Response::new(Body::empty()))
+        } else {
+            Err(ApiError::new(FORWARD_ERR_PATH_IS_REQUIRED))
         }
-        
-
-        // TODO: find an application with first path.
-
-        Ok(Response::new(Body::empty()))
     }
 }
