@@ -4,7 +4,7 @@ use axum::{
     response::{IntoResponse, Response},
     Json,
 };
-use hyper::StatusCode;
+use hyper::{StatusCode, Error};
 use serde::{Deserialize, Serialize};
 
 use super::ApiErrorCode;
@@ -118,6 +118,13 @@ impl IntoResponse for ApiError {
         (status_code, Json(self)).into_response()
     }
 }
+
+// impl From<ApiError> for Error {
+
+//     fn from(value: ApiError) -> Self {
+//         Error::
+//     }
+// }
 
 impl fmt::Display for ApiFieldError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
