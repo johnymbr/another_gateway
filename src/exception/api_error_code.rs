@@ -2,6 +2,7 @@ pub struct ApiErrorCode(pub &'static str, pub &'static str);
 
 // Generic errors.
 pub const ERR_DB_CONNECTION_ERROR: ApiErrorCode = ApiErrorCode("G9000", "Error when connecting to database.");
+pub const ERR_HYPER_ERROR: ApiErrorCode = ApiErrorCode("G0000", "Error when forwarding a request.");
 pub const ERR_INVALID_REQUEST: ApiErrorCode = ApiErrorCode("G0001", "Invalid request");
 
 // Pagination errors.

@@ -30,7 +30,7 @@ impl ForwardService {
 
 #[async_trait]
 impl ForwardServiceTrait for ForwardService {
-    async fn handle(&self, mut req: Request<Body>) -> Result<Response<Body>, hyper::Error> {
+    async fn handle(&self, mut req: Request<Body>) -> Result<Response<Body>, ApiError> {
         let path = req.uri().path();
         tracing::info!("{}", path);
 
@@ -58,8 +58,8 @@ impl ForwardServiceTrait for ForwardService {
 
             let client = Client::new();
 
-            client.request(req).await
-            // Ok(Response::new(Body::empty()))
+            let response = client.request(req).await?;
+            Ok(response)
         } else {
             Err(ApiError::new(FORWARD_ERR_PATH_IS_REQUIRED))
         }
