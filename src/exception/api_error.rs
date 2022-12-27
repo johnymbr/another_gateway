@@ -4,10 +4,10 @@ use axum::{
     response::{IntoResponse, Response},
     Json,
 };
-use hyper::{StatusCode, Error};
+use hyper::{Error, StatusCode};
 use serde::{Deserialize, Serialize};
 
-use super::ApiErrorCode;
+use super::{ApiErrorCode, ERR_HYPER_ERROR};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ApiError {
@@ -49,7 +49,10 @@ impl ApiError {
         }
     }
 
-    pub fn new_with_field_errors(api_error_cde: ApiErrorCode, field_errors: Vec<ApiFieldError>) -> ApiError {
+    pub fn new_with_field_errors(
+        api_error_cde: ApiErrorCode,
+        field_errors: Vec<ApiFieldError>,
+    ) -> ApiError {
         ApiError {
             status_code: 412,
             code: String::from(api_error_cde.0),
@@ -119,12 +122,11 @@ impl IntoResponse for ApiError {
     }
 }
 
-// impl From<ApiError> for Error {
-
-//     fn from(value: ApiError) -> Self {
-//         Error::
-//     }
-// }
+impl From<Error> for ApiError {
+    fn from(_e: Error) -> Self {
+        ApiError::new_with_status(StatusCode::INTERNAL_SERVER_ERROR, ERR_HYPER_ERROR)
+    }
+}
 
 impl fmt::Display for ApiFieldError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
