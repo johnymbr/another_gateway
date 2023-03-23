@@ -17,6 +17,12 @@ use crate::{
 
 pub struct ApplicationController;
 
+impl Default for ApplicationController {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ApplicationController {
     pub fn new() -> Self {
         ApplicationController {}

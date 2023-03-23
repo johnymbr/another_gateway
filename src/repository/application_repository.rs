@@ -43,7 +43,7 @@ impl ApplicationRepositoryTrait for ApplicationRepository {
             .await
             .map_err(|e| {
                 tracing::error!("Error when finding applications: {}", e);
-                return ApiError::new(APP_ERR_FINDING_PAGINATED);
+                ApiError::new(APP_ERR_FINDING_PAGINATED)
             })?;
 
         let mut response = PaginationResponse {
@@ -64,7 +64,7 @@ impl ApplicationRepositoryTrait for ApplicationRepository {
             .await
             .map_err(|e| {
                 tracing::error!("Error when finding applications: {}", e);
-                return ApiError::new(APP_ERR_FINDING_PAGINATED);
+                ApiError::new(APP_ERR_FINDING_PAGINATED)
             })?;
 
             response.elements = applications;
@@ -83,7 +83,7 @@ impl ApplicationRepositoryTrait for ApplicationRepository {
         .await
         .map_err(|e| {
             tracing::error!("Error when finding an application by id: {}", e);
-            return ApiError::new(APP_ERR_FIND_BY_ID);
+            ApiError::new(APP_ERR_FIND_BY_ID)
         })?;
 
         Ok(application)
@@ -99,7 +99,7 @@ impl ApplicationRepositoryTrait for ApplicationRepository {
         .await
         .map_err(|e| {
             tracing::error!("Error when finding an application by path: {}", e);
-            return ApiError::new(APP_ERR_FIND_BY_PATH);
+            ApiError::new(APP_ERR_FIND_BY_PATH)
         })?;
 
         Ok(application)
@@ -116,7 +116,7 @@ impl ApplicationRepositoryTrait for ApplicationRepository {
             .await
             .map_err(|e| {
                 tracing::info!("Error when inserting an application: {}", e);
-                return ApiError::new(APP_ERR_INSERTING);
+                ApiError::new(APP_ERR_INSERTING)
             })?;
 
         Ok(application)
@@ -133,7 +133,7 @@ impl ApplicationRepositoryTrait for ApplicationRepository {
             .await
             .map_err(|e| {
                 tracing::info!("Error when updating an application: {}", e);
-                return ApiError::new(APP_ERR_UPDATING);
+                ApiError::new(APP_ERR_UPDATING)
             })?;
 
         Ok(application)
@@ -146,7 +146,7 @@ impl ApplicationRepositoryTrait for ApplicationRepository {
             .await
             .map_err(|e| {
                 tracing::info!("Error when deleting an application: {}", e);
-                return ApiError::new(APP_ERR_DELETE);
+                ApiError::new(APP_ERR_DELETE)
             })?;
 
         Ok(())

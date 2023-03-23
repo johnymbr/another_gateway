@@ -51,7 +51,7 @@ impl ApplicationServiceTrait for ApplicationService {
     async fn find_by_id(&self, id: i64) -> Result<Application, ApiError> {
         let response = self.application_repository.find_by_id(id).await?;
 
-        if let None = response {
+        if response.is_none() {
             return Err(ApiError::new_with_status(
                 StatusCode::NOT_FOUND,
                 APP_ERR_NOT_FOUND,
@@ -63,7 +63,7 @@ impl ApplicationServiceTrait for ApplicationService {
     async fn find_by_path(&self, path: &str) -> Result<Application, ApiError> {
         let response = self.application_repository.find_by_path(path).await?;
 
-        if let None = response {
+        if response.is_none() {
             return Err(ApiError::new_with_status(StatusCode::NOT_FOUND, APP_ERR_NOT_FOUND))
         }
 
@@ -104,7 +104,7 @@ impl ApplicationServiceTrait for ApplicationService {
     }
 
     async fn delete(&self, id: i64) -> Result<(), ApiError> {
-        if let Some(_) = self.application_repository.find_by_id(id).await? {
+        if (self.application_repository.find_by_id(id).await?).is_some() {
             self.application_repository.delete(id).await?;
             Ok(())
         } else {

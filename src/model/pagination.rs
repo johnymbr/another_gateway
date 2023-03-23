@@ -15,18 +15,12 @@ impl Pagination {
     }
 
     pub fn validate(&self) -> Result<(), ApiError> {
-        match self.page {
-            None => {
-                return Err(ApiError::new(PG_ERR_PAGE_REQUIRED));
-            },
-            _ => {}
+        if self.page.is_none() {
+            return Err(ApiError::new(PG_ERR_PAGE_REQUIRED));
         }
 
-        match self.page_size {
-            None => {
-                return Err(ApiError::new(PG_ERR_PAGE_SIZE_REQUIRED));
-            },
-            _ => {}
+        if self.page_size.is_none() {
+            return Err(ApiError::new(PG_ERR_PAGE_SIZE_REQUIRED));
         }
 
         Ok(())

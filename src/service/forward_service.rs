@@ -1,10 +1,10 @@
-use std::{sync::Arc, collections::VecDeque, str::FromStr};
+use std::{sync::Arc, collections::VecDeque};
 
 use axum::{
     async_trait,
-    http::{Request, Response, uri::Uri, HeaderValue},
+    http::{Request, Response, uri::Uri},
 };
-use hyper::{Body, Client, header::HeaderName, Version, client::HttpConnector};
+use hyper::{Body, Client, header::HeaderName, client::HttpConnector};
 use hyper_tls::HttpsConnector;
 use sqlx::PgPool;
 
@@ -38,7 +38,7 @@ impl ForwardServiceTrait for ForwardService {
         let path = req.uri().path();
         tracing::info!("{}", path);
 
-        let mut path_segment = path.split("/").collect::<VecDeque<&str>>();
+        let mut path_segment = path.split('/').collect::<VecDeque<&str>>();
         path_segment = path_segment.into_iter().filter(|segment| !segment.trim().is_empty() || segment.eq(&"/")).collect::<VecDeque<&str>>();
         if path_segment.is_empty() {
             return Err(ApiError::new(FORWARD_ERR_PATH_IS_REQUIRED));
@@ -52,7 +52,7 @@ impl ForwardServiceTrait for ForwardService {
 
             let mut new_path_and_query = Vec::from(path_segment).join("/");
             if let Some(query) = req.uri().query() {
-                new_path_and_query = new_path_and_query + query;
+                new_path_and_query += query;
             }
 
             let new_uri = format!("{}/{}", application.url_destination, new_path_and_query);
