@@ -14,9 +14,9 @@ use std::sync::Arc;
 use tower_http::trace::TraceLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
+use common::{exception, model};
+
 pub mod config;
-pub mod exception;
-pub mod model;
 pub mod repository;
 pub mod rest;
 pub mod service;
