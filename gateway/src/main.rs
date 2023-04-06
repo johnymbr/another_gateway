@@ -6,7 +6,6 @@ use crate::rest::{ApplicationController, ForwardController};
 
 use axum::routing::any;
 use axum::{Json, Router};
-use dotenv::dotenv;
 use hyper::StatusCode;
 use serde_json::{json, Value};
 use std::net::SocketAddr;
@@ -32,12 +31,12 @@ async fn api_fallback() -> (StatusCode, Json<Value>) {
 #[tokio::main]
 async fn main() {
     // load .env file
-    dotenv().ok();
+    dotenvy::from_filename("gateway.env").ok();
 
     // initializing tracing
     tracing_subscriber::registry()
         .with(tracing_subscriber::EnvFilter::new(
-            std::env::var("RUST_LOG").unwrap_or_else(|_| "another_gateway=debug".into()),
+            std::env::var("RUST_LOG").unwrap_or_else(|_| "gateway=debug".into()),
         ))
         .with(tracing_subscriber::fmt::layer())
         .init();

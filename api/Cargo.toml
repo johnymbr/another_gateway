@@ -1,5 +1,5 @@
 [package]
-name = "ag_api"
+name = "api"
 version = "0.1.0"
 edition = { workspace = true }
 
@@ -12,7 +12,7 @@ axum-server = { workspace = true }
 chrono = { workspace = true }
 common = { path = "../common" }
 derive_more = { workspace = true }
-dotenv = { workspace = true }
+dotenvy = { workspace = true }
 hyper = { workspace = true }
 hyper-tls = { workspace = true }
 mockall = { workspace = true }
