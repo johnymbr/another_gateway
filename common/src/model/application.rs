@@ -2,30 +2,25 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 
-use crate::exception::{ApiError, ApiFieldError, ERR_INVALID_REQUEST, ERR_REQUIRED_FIELD};
+use crate::exception::{ApiError, ApiFieldError, ERR_INVALID_REQUEST, ERR_REQUIRED_FIELD, ERR_MIN_SIZE};
 
 use super::StringMinSize3;
 
 #[derive(Serialize, Deserialize, Debug, FromRow)]
+#[serde(rename_all = "camelCase")]
 pub struct Application {
     pub id: i64,
     pub name: String,
-    pub path: String,
-    #[serde(rename = "urlDestination")]
-    pub url_destination: String,
-    #[serde(rename = "createdDttm")]
     pub created_dttm: DateTime<Utc>,
-    #[serde(rename = "updateDttm")]
     pub update_dttm: DateTime<Utc>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct ApplicationReq {
-    pub name: Option<StringMinSize3>,
-    pub path: Option<StringMinSize3>,
-    #[serde(rename = "urlDestination")]
-    pub url_destination: Option<StringMinSize3>,
+    pub name: Option<String>,
+    pub path: Option<String>,
+    pub url_destination: Option<String>,
 }
 
 impl ApplicationReq {
@@ -34,9 +29,14 @@ impl ApplicationReq {
 
         match &self.name {
             Some(name) => {
-                if let Err(e) = name.validate("application.name".to_owned()) {
-                    field_errors.push(e);
+                if name.len() < 3 {
+                    field_errors.push(ApiFieldError::new_with_min_size(
+                        ERR_MIN_SIZE,
+                        "application.name".to_owned(),
+                        3,
+                    ));
                 }
+                
             }
             None => {
                 field_errors.push(ApiFieldError::new(
@@ -48,8 +48,12 @@ impl ApplicationReq {
 
         match &self.path {
             Some(path) => {
-                if let Err(e) = path.validate("application.path".to_owned()) {
-                    field_errors.push(e);
+                if path.len() < 3 {
+                    field_errors.push(ApiFieldError::new_with_min_size(
+                        ERR_MIN_SIZE,
+                        "application.path".to_owned(),
+                        3,
+                    ));
                 }
             }
             None => {
