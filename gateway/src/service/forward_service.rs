@@ -4,7 +4,7 @@ use axum::{
     async_trait,
     http::{Request, Response, uri::Uri},
 };
-use hyper::{Body, Client, header::HeaderName, client::HttpConnector};
+use hyper::{Body, Client, header::HeaderName, client::HttpConnector, StatusCode};
 use hyper_tls::HttpsConnector;
 use sqlx::PgPool;
 
@@ -47,29 +47,29 @@ impl ForwardServiceTrait for ForwardService {
         if let Some(path_application) = path_segment.pop_front() {
             tracing::info!("{:?}", path_application);
 
-            let application = self.application_service.find_by_path((String::from("/") + path_application).as_str()).await?;
-            tracing::info!("{:?}", application.path);
+            // let application = self.application_service.find_by_path((String::from("/") + path_application).as_str()).await?;
+            // tracing::info!("{:?}", application.path);
 
-            let mut new_path_and_query = Vec::from(path_segment).join("/");
-            if let Some(query) = req.uri().query() {
-                new_path_and_query += query;
-            }
+            // let mut new_path_and_query = Vec::from(path_segment).join("/");
+            // if let Some(query) = req.uri().query() {
+            //     new_path_and_query += query;
+            // }
 
-            let new_uri = format!("{}/{}", application.url_destination, new_path_and_query);
+            // let new_uri = format!("{}/{}", application.url_destination, new_path_and_query);
 
-            *req.uri_mut() = Uri::try_from(new_uri).unwrap();
-            req.headers_mut().remove(HeaderName::from_static("host"));
+            // *req.uri_mut() = Uri::try_from(new_uri).unwrap();
+            // req.headers_mut().remove(HeaderName::from_static("host"));
 
-            tracing::info!("{:?}", req);
+            // tracing::info!("{:?}", req);
 
-            let response = self.client.request(req).await.map_err(|e| {
-                tracing::error!("{:?}", e);
-                e
-            })?;
+            // let response = self.client.request(req).await.map_err(|e| {
+            //     tracing::error!("{:?}", e);
+            //     e
+            // })?;
 
-            tracing::info!("{:?}", response);
+            // tracing::info!("{:?}", response);
 
-            Ok(response)
+            Ok(Response::new("Hello world".into()))
         } else {
             Err(ApiError::new(FORWARD_ERR_PATH_IS_REQUIRED))
         }

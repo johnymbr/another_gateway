@@ -19,8 +19,6 @@ pub trait ApplicationRepositoryTrait {
 
     async fn find_by_id(&self, id: i64) -> Result<Option<Application>, ApiError>;
 
-    async fn find_by_path(&self, path: &str) -> Result<Option<Application>, ApiError>;
-
     async fn save(&self, entity: ApplicationReq) -> Result<Application, ApiError>;
 
     async fn update(&self, entity: Application) -> Result<Application, ApiError>;
@@ -89,27 +87,9 @@ impl ApplicationRepositoryTrait for ApplicationRepository {
         Ok(application)
     }
 
-    async fn find_by_path(&self, path: &str) -> Result<Option<Application>, ApiError> {
-        let application = sqlx::query_as!(
-            Application,
-            r#"select * from anothergtw.tb_application where path = $1"#,
-            path
-        )
-        .fetch_optional(&*self.pg_pool)
-        .await
-        .map_err(|e| {
-            tracing::error!("Error when finding an application by path: {}", e);
-            ApiError::new(APP_ERR_FIND_BY_PATH)
-        })?;
-
-        Ok(application)
-    }
-
     async fn save(&self, entity: ApplicationReq) -> Result<Application, ApiError> {
-        let application = sqlx::query_as("insert into anothergtw.tb_application(name, path, url_destination, created_dttm, update_dttm) values ($1, $2, $3, $4, $5) returning *;")
-            .bind(entity.name.unwrap().value())
-            .bind(entity.path.unwrap().value())
-            .bind(entity.url_destination.unwrap().value())
+        let application = sqlx::query_as("insert into anothergtw.tb_application(name, created_at, updated_at) values ($1, $2, $3) returning *;")
+            .bind(entity.name.unwrap())
             .bind(Utc::now())
             .bind(Utc::now())
             .fetch_one(&*self.pg_pool)
@@ -123,10 +103,8 @@ impl ApplicationRepositoryTrait for ApplicationRepository {
     }
 
     async fn update(&self, entity: Application) -> Result<Application, ApiError> {
-        let application = sqlx::query_as("update anothergtw.tb_application set name = $1, path = $2, url_destination = $3, update_dttm = $4 where id = $5 returning *;")
+        let application = sqlx::query_as("update anothergtw.tb_application set name = $1, updated_at = $2 where id = $3 returning *;")
             .bind(entity.name)
-            .bind(entity.path)
-            .bind(entity.url_destination)
             .bind(Utc::now())
             .bind(entity.id)
             .fetch_one(&*self.pg_pool)

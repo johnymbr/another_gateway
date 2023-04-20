@@ -1,10 +1,7 @@
-use std::str::FromStr;
-
 use chrono::Utc;
 
 use crate::{
     exception::{APP_ERR_INSERTING, PG_ERR_PAGE_REQUIRED, PG_ERR_PAGE_SIZE_REQUIRED, ERR_INVALID_REQUEST, APP_ERR_UPDATING, APP_ERR_DELETE},
-    model::StringMinSize3,
     repository::MockApplicationRepositoryTrait,
 };
 
@@ -71,10 +68,8 @@ async fn find_by_id() {
         Ok(Some(Application {
             id: 1,
             name: String::from("Teste"),
-            path: String::from("/teste"),
-            url_destination: String::from("http://anothergtw.com"),
-            created_dttm: Utc::now(),
-            update_dttm: Utc::now(),
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
         }))
     });
 
@@ -104,17 +99,15 @@ async fn save() {
         Ok(Application {
             id: 1,
             name: String::from("Teste"),
-            path: String::from("/teste"),
-            url_destination: String::from("http://anothergtw.com"),
-            created_dttm: Utc::now(),
-            update_dttm: Utc::now(),
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
         })
     });
 
     let request = ApplicationReq {
-        name: Some(StringMinSize3::from_str("teste").unwrap()),
-        path: Some(StringMinSize3::from_str("/teste").unwrap()),
-        url_destination: Some(StringMinSize3::from_str("http://anothergw.com").unwrap()),
+        name: Some("teste".to_string()),
+        path: Some("/teste".to_string()),
+        url_destination: Some("http://anothergw.com".to_string()),
     };
 
     let service = ApplicationService::new_with_repo(Arc::new(mock_repo));
@@ -148,9 +141,9 @@ async fn save_without_min_size() {
     let mock_repo = MockApplicationRepositoryTrait::new();
 
     let request = ApplicationReq {
-        name: Some(StringMinSize3::from_str("te").unwrap()),
-        path: Some(StringMinSize3::from_str("/t").unwrap()),
-        url_destination: Some(StringMinSize3::from_str("ht").unwrap()),
+        name: Some("te".to_string()),
+        path: Some("/t".to_string()),
+        url_destination: Some("ht".to_string()),
     };
 
     let service = ApplicationService::new_with_repo(Arc::new(mock_repo));
@@ -171,9 +164,9 @@ async fn save_with_repository_error() {
         .returning(|_| Err(ApiError::new(APP_ERR_INSERTING)));
 
     let request = ApplicationReq {
-        name: Some(StringMinSize3::from_str("teste").unwrap()),
-        path: Some(StringMinSize3::from_str("/teste").unwrap()),
-        url_destination: Some(StringMinSize3::from_str("http://anothergw.com").unwrap()),
+        name: Some("teste".to_string()),
+        path: Some("/teste".to_string()),
+        url_destination: Some("http://anothergw.com".to_string()),
     };
 
     let service = ApplicationService::new_with_repo(Arc::new(mock_repo));
@@ -190,10 +183,8 @@ async fn update() {
         Ok(Some(Application {
             id: 1,
             name: String::from("Teste"),
-            path: String::from("/teste"),
-            url_destination: String::from("http://anothergtw.com"),
-            created_dttm: Utc::now(),
-            update_dttm: Utc::now(),
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
         }))
     });
 
@@ -201,17 +192,15 @@ async fn update() {
         Ok(Application {
             id: 1,
             name: String::from("Teste"),
-            path: String::from("/teste"),
-            url_destination: String::from("http://anothergtw.com"),
-            created_dttm: Utc::now(),
-            update_dttm: Utc::now(),
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
         })
     });
 
     let request = ApplicationReq {
-        name: Some(StringMinSize3::from_str("teste").unwrap()),
-        path: Some(StringMinSize3::from_str("/teste").unwrap()),
-        url_destination: Some(StringMinSize3::from_str("http://anothergw.com").unwrap()),
+        name: Some("teste".to_string()),
+        path: Some("/teste".to_string()),
+        url_destination: Some("http://anothergw.com".to_string()),
     };
 
     let service = ApplicationService::new_with_repo(Arc::new(mock_repo));
@@ -229,9 +218,9 @@ async fn update_application_not_found() {
     });
 
     let request = ApplicationReq {
-        name: Some(StringMinSize3::from_str("teste").unwrap()),
-        path: Some(StringMinSize3::from_str("/teste").unwrap()),
-        url_destination: Some(StringMinSize3::from_str("http://anothergw.com").unwrap()),
+        name: Some("teste".to_string()),
+        path: Some("/teste".to_string()),
+        url_destination: Some("http://anothergw.com".to_string()),
     };
 
     let service = ApplicationService::new_with_repo(Arc::new(mock_repo));
@@ -244,9 +233,9 @@ async fn update_application_not_found() {
 #[tokio::test]
 async fn update_with_field_errors() {
     let request = ApplicationReq {
-        name: Some(StringMinSize3::from_str("te").unwrap()),
-        path: Some(StringMinSize3::from_str("/teste").unwrap()),
-        url_destination: Some(StringMinSize3::from_str("http://anothergw.com").unwrap()),
+        name: Some("te".to_string()),
+        path: Some("/teste".to_string()),
+        url_destination: Some("http://anothergw.com".to_string()),
     };
 
     let service = ApplicationService::new_with_repo(Arc::new(MockApplicationRepositoryTrait::new()));
@@ -267,10 +256,8 @@ async fn update_repository_error() {
         Ok(Some(Application {
             id: 1,
             name: String::from("Teste"),
-            path: String::from("/teste"),
-            url_destination: String::from("http://anothergtw.com"),
-            created_dttm: Utc::now(),
-            update_dttm: Utc::now(),
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
         }))
     });
 
@@ -279,9 +266,9 @@ async fn update_repository_error() {
         .returning(|_| Err(ApiError::new(APP_ERR_UPDATING)));
 
     let request = ApplicationReq {
-        name: Some(StringMinSize3::from_str("teste").unwrap()),
-        path: Some(StringMinSize3::from_str("/teste").unwrap()),
-        url_destination: Some(StringMinSize3::from_str("http://anothergw.com").unwrap()),
+        name: Some("teste".to_string()),
+        path: Some("/teste".to_string()),
+        url_destination: Some("http://anothergw.com".to_string()),
     };
 
     let service = ApplicationService::new_with_repo(Arc::new(mock_repo));
@@ -298,10 +285,8 @@ async fn delete() {
         Ok(Some(Application {
             id: 1,
             name: String::from("Teste"),
-            path: String::from("/teste"),
-            url_destination: String::from("http://anothergtw.com"),
-            created_dttm: Utc::now(),
-            update_dttm: Utc::now(),
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
         }))
     });
 
@@ -332,10 +317,8 @@ async fn delete_with_repository_error() {
         Ok(Some(Application {
             id: 1,
             name: String::from("Teste"),
-            path: String::from("/teste"),
-            url_destination: String::from("http://anothergtw.com"),
-            created_dttm: Utc::now(),
-            update_dttm: Utc::now(),
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
         }))
     });
 

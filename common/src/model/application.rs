@@ -4,15 +4,13 @@ use sqlx::FromRow;
 
 use crate::exception::{ApiError, ApiFieldError, ERR_INVALID_REQUEST, ERR_REQUIRED_FIELD, ERR_MIN_SIZE};
 
-use super::StringMinSize3;
-
 #[derive(Serialize, Deserialize, Debug, FromRow)]
 #[serde(rename_all = "camelCase")]
 pub struct Application {
     pub id: i64,
     pub name: String,
-    pub created_dttm: DateTime<Utc>,
-    pub update_dttm: DateTime<Utc>,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -27,55 +25,16 @@ impl ApplicationReq {
     pub fn validate(&self) -> Result<(), ApiError> {
         let mut field_errors = Vec::<ApiFieldError>::new();
 
-        match &self.name {
-            Some(name) => {
-                if name.len() < 3 {
-                    field_errors.push(ApiFieldError::new_with_min_size(
-                        ERR_MIN_SIZE,
-                        "application.name".to_owned(),
-                        3,
-                    ));
-                }
-                
-            }
-            None => {
-                field_errors.push(ApiFieldError::new(
-                    ERR_REQUIRED_FIELD,
-                    "application.name".to_owned(),
-                ));
-            }
+        if let Err(error) = self.validate_name(true) {
+            field_errors.push(error);
         }
 
-        match &self.path {
-            Some(path) => {
-                if path.len() < 3 {
-                    field_errors.push(ApiFieldError::new_with_min_size(
-                        ERR_MIN_SIZE,
-                        "application.path".to_owned(),
-                        3,
-                    ));
-                }
-            }
-            None => {
-                field_errors.push(ApiFieldError::new(
-                    ERR_REQUIRED_FIELD,
-                    "application.path".to_owned(),
-                ));
-            }
+        if let Err(error) = self.validate_path(true) {
+            field_errors.push(error);
         }
 
-        match &self.url_destination {
-            Some(url_destination) => {
-                if let Err(e) = url_destination.validate("application.urlDestination".to_owned()) {
-                    field_errors.push(e);
-                }
-            }
-            None => {
-                field_errors.push(ApiFieldError::new(
-                    ERR_REQUIRED_FIELD,
-                    "application.urlDestination".to_owned(),
-                ));
-            }
+        if let Err(error) = self.validate_url_destination(true) {
+            field_errors.push(error);
         }
 
         if !field_errors.is_empty() {
@@ -91,31 +50,16 @@ impl ApplicationReq {
     pub fn validate_updating(&self) -> Result<(), ApiError> {
         let mut field_errors = Vec::<ApiFieldError>::new();
 
-        match &self.name {
-            Some(name) => {
-                if let Err(e) = name.validate("application.name".to_owned()) {
-                    field_errors.push(e);
-                }
-            }
-            None => {}
+        if let Err(error) = self.validate_name(false) {
+            field_errors.push(error);
         }
 
-        match &self.path {
-            Some(path) => {
-                if let Err(e) = path.validate("application.path".to_owned()) {
-                    field_errors.push(e);
-                }
-            }
-            None => {}
+        if let Err(error) = self.validate_path(false) {
+            field_errors.push(error);
         }
 
-        match &self.url_destination {
-            Some(url_destination) => {
-                if let Err(e) = url_destination.validate("application.urlDestination".to_owned()) {
-                    field_errors.push(e);
-                }
-            }
-            None => {}
+        if let Err(error) = self.validate_url_destination(false) {
+            field_errors.push(error);
         }
 
         if !field_errors.is_empty() {
@@ -126,5 +70,84 @@ impl ApplicationReq {
         }
 
         Ok(())
+    }
+
+    fn validate_name(&self, is_required: bool) -> Result<(), ApiFieldError> {
+        match &self.name {
+            Some(name) => {
+                if name.len() < 3 {
+                    Err(ApiFieldError::new_with_min_size(
+                        ERR_MIN_SIZE,
+                        "application.name".to_owned(),
+                        3,
+                    ))
+                } else {
+                    Ok(())
+                }
+                
+            }
+            None => {
+                if is_required {
+                    Err(ApiFieldError::new(
+                        ERR_REQUIRED_FIELD,
+                        "application.name".to_owned(),
+                    ))
+                } else {
+                    Ok(())
+                }
+            }
+        }
+    }
+
+    fn validate_path(&self, is_required: bool) -> Result<(), ApiFieldError> {
+        match &self.path {
+            Some(path) => {
+                if path.len() < 3 {
+                    Err(ApiFieldError::new_with_min_size(
+                        ERR_MIN_SIZE,
+                        "application.path".to_owned(),
+                        3,
+                    ))
+                } else {
+                    Ok(())
+                }
+            }
+            None => {
+                if is_required {
+                    Err(ApiFieldError::new(
+                        ERR_REQUIRED_FIELD,
+                        "application.path".to_owned(),
+                    ))
+                } else {
+                    Ok(())
+                }
+            }
+        }
+    }
+
+    fn validate_url_destination(&self, is_required: bool) -> Result<(), ApiFieldError> {
+        match &self.url_destination {
+            Some(url_destination) => {
+                if url_destination.len() < 3 {
+                    Err(ApiFieldError::new_with_min_size(
+                        ERR_MIN_SIZE,
+                        "application.urlDestination".to_owned(),
+                        3
+                    ))
+                } else {
+                    Ok(())
+                }
+            }
+            None => {
+                if is_required {
+                    Err(ApiFieldError::new(
+                        ERR_REQUIRED_FIELD,
+                        "application.urlDestination".to_owned(),
+                    ))
+                } else {
+                    Ok(())
+                }
+            }
+        }
     }
 }

@@ -15,15 +15,13 @@ use crate::{
 };
 
 #[async_trait]
-pub trait ApplicationServiceTrait {
+pub trait ApplicationServiceTrait: std::fmt::Debug {
     async fn find_all(
         &self,
         pagination: Pagination,
     ) -> Result<PaginationResponse<Application>, ApiError>;
 
     async fn find_by_id(&self, id: i64) -> Result<Application, ApiError>;
-
-    async fn find_by_path(&self, path: &str) -> Result<Application, ApiError>;
 
     async fn save(&self, entity: ApplicationReq) -> Result<Application, ApiError>;
 
@@ -32,6 +30,7 @@ pub trait ApplicationServiceTrait {
     async fn delete(&self, id: i64) -> Result<(), ApiError>;
 }
 
+#[derive(Debug)]
 pub struct ApplicationService {
     application_repository: Arc<dyn ApplicationRepositoryTrait + Send + Sync>,
 }
@@ -60,16 +59,6 @@ impl ApplicationServiceTrait for ApplicationService {
         Ok(response.unwrap())
     }
 
-    async fn find_by_path(&self, path: &str) -> Result<Application, ApiError> {
-        let response = self.application_repository.find_by_path(path).await?;
-
-        if response.is_none() {
-            return Err(ApiError::new_with_status(StatusCode::NOT_FOUND, APP_ERR_NOT_FOUND))
-        }
-
-        Ok(response.unwrap())
-    }
-
     async fn save(&self, entity: ApplicationReq) -> Result<Application, ApiError> {
         entity.validate()?;
 
@@ -82,15 +71,7 @@ impl ApplicationServiceTrait for ApplicationService {
 
         if let Some(mut application) = self.application_repository.find_by_id(id).await? {
             if let Some(name) = entity.name {
-                application.name = name.value();
-            }
-
-            if let Some(path) = entity.path {
-                application.path = path.value();
-            }
-
-            if let Some(url_destination) = entity.url_destination {
-                application.url_destination = url_destination.value();
+                application.name = name;
             }
 
             application = self.application_repository.update(application).await?;

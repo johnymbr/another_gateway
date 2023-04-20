@@ -8,6 +8,7 @@ use axum::{
 };
 use hyper::StatusCode;
 use sqlx::PgPool;
+use tracing::instrument;
 
 use crate::{
     exception::ApiError,
@@ -46,6 +47,7 @@ impl ApplicationController {
             .with_state(Arc::clone(&application_service))
     }
 
+    #[instrument]
     async fn find_all(
         Query(pagination): Query<Pagination>,
         State(application_service): State<Arc<dyn ApplicationServiceTrait + Send + Sync>>,
